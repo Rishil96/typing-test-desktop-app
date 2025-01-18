@@ -1,4 +1,5 @@
 import tkinter as tk
+import random
 
 APPLICATION_BACKGROUND_COLOR = "#f5f5f5"
 
@@ -11,6 +12,8 @@ class TypingApp(tk.Tk):
         self.seconds = 60
         self.recent_typing_speed = 0
         self.max_typing_speed = 0
+        self.words_list = self.get_word_list()
+        self.current_test_sentence = ""
 
         # Initial Configurations
         self.title("PyTypist App")
@@ -39,7 +42,7 @@ class TypingApp(tk.Tk):
                                        font=("Courier", 12),
                                        fg="#444444",  # Slightly darker gray
                                        bg=APPLICATION_BACKGROUND_COLOR,
-                                       wraplength=400,
+                                       wraplength=500,
                                        justify="center")
         self.typing_content.grid(row=2, column=0, columnspan=2, pady=10, sticky="ew", padx=20)
 
@@ -85,6 +88,23 @@ class TypingApp(tk.Tk):
         else:
             self.timer_label.config(text="Time's up!")
             self.start_button.config(state="normal")
+
+    @staticmethod
+    def get_word_list() -> list:
+        with open("words.txt") as f:
+            contents = f.readlines()
+            word_list = [word.strip() for word in contents if len(word)  >= 3]
+
+        return word_list
+
+    def generate_test_sentence(self, num_words=12):
+        sentence = " ".join(random.sample(self.words_list, num_words))
+        return sentence
+
+    def display_test_sentence(self):
+        random_sentence = self.generate_test_sentence()
+        self.current_test_sentence = random_sentence
+        self.typing_content.config(text=random_sentence)
 
 
 if __name__ == "__main__":
