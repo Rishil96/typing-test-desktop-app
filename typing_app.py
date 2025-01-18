@@ -7,6 +7,11 @@ class TypingApp(tk.Tk):
 
     def __init__(self):
         super().__init__()
+        # Attributes
+        self.seconds = 60
+        self.recent_typing_speed = 0
+        self.max_typing_speed = 0
+
         # Initial Configurations
         self.title("PyTypist App")
         self.minsize(width=600, height=350)
@@ -43,11 +48,10 @@ class TypingApp(tk.Tk):
         self.typing_box.grid(row=3, column=0, columnspan=2, pady=15, sticky="ew", padx=20)
 
         # Start button
-        self.start_button = tk.Button(text="Start Test")
+        self.start_button = tk.Button(text="Start Test", command=self.update_timer)
         self.start_button.grid(row=4, column=0, pady=10, padx=20, sticky="ew")
 
         # Timer Display
-        self.seconds = 60
         self.timer_label = tk.Label(text=f"Time Left 1:00",
                                     font=("Helvetica", 16, "bold"),
                                     fg="#ff4500",  # Orange-red color
@@ -55,14 +59,12 @@ class TypingApp(tk.Tk):
         self.timer_label.grid(row=4, column=1, pady=10, padx=20, sticky="ew")
 
         # Result Display
-        self.recent_typing_speed = 0
         self.typing_speed_label = tk.Label(text=f"Latest Typing Speed: {self.recent_typing_speed} wpm",
                                            font=("Helvetica", 12),
                                            fg="#333333",
                                            bg=APPLICATION_BACKGROUND_COLOR)
         self.typing_speed_label.grid(row=5, column=0, pady=10, sticky="ew", padx=20)
 
-        self.max_typing_speed = 0
         self.highest_speed_label = tk.Label(text=f"Max Speed: {self.max_typing_speed} wpm",
                                             font=("Helvetica", 12),
                                             fg="#333333",
@@ -70,6 +72,19 @@ class TypingApp(tk.Tk):
         self.highest_speed_label.grid(row=5, column=1, pady=10, sticky="ew", padx=20)
 
         self.mainloop()
+
+    def update_timer(self):
+        self.start_button.config(state="disabled")
+        if self.seconds > 0:
+            self.seconds -= 1
+            if self.seconds < 10:
+                self.timer_label.config(text=f"Time Left 0:0{self.seconds}")
+            else:
+                self.timer_label.config(text=f"Time Left 0:{self.seconds}")
+            self.after(1000, self.update_timer)
+        else:
+            self.timer_label.config(text="Time's up!")
+            self.start_button.config(state="normal")
 
 
 if __name__ == "__main__":
