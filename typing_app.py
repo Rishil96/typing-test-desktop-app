@@ -3,18 +3,21 @@ import random
 
 APPLICATION_BACKGROUND_COLOR = "#f5f5f5"
 FONT_STYLE = "Helvetica"
-
+TOTAL_TEST_TIME_SECONDS = 36
+TEST_STARTING_POINT = 30
 
 class TypingApp(tk.Tk):
 
     def __init__(self):
         super().__init__()
         # Attributes
-        self.seconds = 66
-        self.recent_typing_speed = 0
-        self.max_typing_speed = 0
+        self.seconds = TOTAL_TEST_TIME_SECONDS
+        self.typing_speed = 0
+        self.typing_accuracy = 0
         self.words_list = self.get_word_list()
         self.current_test_sentence = ""
+        self.total_characters_typed = 0
+        self.incorrect_characters_typed = 0
 
         # Initial Configurations
         self.title("PyTypist App")
@@ -40,7 +43,7 @@ class TypingApp(tk.Tk):
 
         # Text Display area for typing test
         self.typing_content = tk.Label(text="Here is some dummy text to type.\nTry your best to finish quickly!",
-                                       font=("Courier", 14),
+                                       font=("Courier", 14, "bold"),
                                        fg="#444444",  # Slightly darker gray
                                        bg=APPLICATION_BACKGROUND_COLOR,
                                        wraplength=500,
@@ -58,36 +61,36 @@ class TypingApp(tk.Tk):
         self.start_button.grid(row=4, column=0, pady=10, padx=20, sticky="ew")
 
         # Timer Display
-        self.timer_label = tk.Label(text=f"Time Left 1:00",
+        self.timer_label = tk.Label(text=f"{TEST_STARTING_POINT} second test",
                                     font=(FONT_STYLE, 16, "bold"),
                                     fg="#ff4500",  # Orange-red color
                                     bg=APPLICATION_BACKGROUND_COLOR)
         self.timer_label.grid(row=4, column=1, pady=10, padx=20, sticky="ew")
 
         # Result Display
-        self.typing_speed_label = tk.Label(text=f"Latest Typing Speed: {self.recent_typing_speed} wpm",
+        self.typing_speed_label = tk.Label(text=f"Speed: {self.typing_speed} wpm",
                                            font=(FONT_STYLE, 12),
                                            fg="#333333",
                                            bg=APPLICATION_BACKGROUND_COLOR)
         self.typing_speed_label.grid(row=5, column=0, pady=10, sticky="ew", padx=20)
 
-        self.highest_speed_label = tk.Label(text=f"Max Speed: {self.max_typing_speed} wpm",
-                                            font=(FONT_STYLE, 12),
-                                            fg="#333333",
-                                            bg=APPLICATION_BACKGROUND_COLOR)
-        self.highest_speed_label.grid(row=5, column=1, pady=10, sticky="ew", padx=20)
+        self.typing_accuracy_label = tk.Label(text=f"Accuracy: {self.typing_accuracy}%",
+                                              font=(FONT_STYLE, 12),
+                                              fg="#333333",
+                                              bg=APPLICATION_BACKGROUND_COLOR)
+        self.typing_accuracy_label.grid(row=5, column=1, pady=10, sticky="ew", padx=20)
 
         self.mainloop()
 
     def update_timer(self):
         self.start_button.config(state="disabled")
         # Countdown before starting test
-        if self.seconds > 60:
+        if self.seconds > TEST_STARTING_POINT:
             self.seconds -= 1
-            self.timer_label.config(text=f"Test starts in {self.seconds % 60}")
+            self.timer_label.config(text=f"Test starts in {self.seconds % TEST_STARTING_POINT}")
             self.after(1000, self.update_timer)
         # Actual test start point, enable typing box
-        elif self.seconds == 60:
+        elif self.seconds == TEST_STARTING_POINT:
             self.seconds -= 1
             # Enable typing box state
             self.typing_box.config(state="normal")
@@ -106,9 +109,7 @@ class TypingApp(tk.Tk):
         # Test over state
         else:
             self.timer_label.config(text="Time's up!")
-            self.start_button.config(state="normal")
-            self.typing_box.delete(0, tk.END)
-            self.typing_box.config(state="disabled")
+            self.reset_test()
 
     @staticmethod
     def get_word_list() -> list:
@@ -128,24 +129,48 @@ class TypingApp(tk.Tk):
         self.typing_content.config(text=random_sentence)
 
     def key_press_event(self, e):
+
         typed_text = self.typing_box.get()
-        print(e.char)
+
+        # Avoid counting characters when backspace is pressed
+        if e.keysym == "BackSpace":
+            return
+
         # Check if full sentence was typed correctly
         if typed_text == self.current_test_sentence:
             self.display_test_sentence()
             self.typing_box.delete(0, tk.END)
+            self.total_characters_typed += 1
         # Check for inaccuracies in typed sentence
         elif typed_text != self.current_test_sentence[:len(typed_text)]:
             self.typing_box.config(fg="red")
+            self.incorrect_characters_typed += 1
         else:
             self.typing_box.config(fg="green")
-
+            self.total_characters_typed += 1
 
     def start_test(self):
         # Start timer
         self.update_timer()
         # Generate test sentence
         self.display_test_sentence()
+
+    def reset_test(self):
+        # Reset UI functionalities as it was before starting the test
+        self.start_button.config(state="normal")
+        self.typing_box.delete(0, tk.END)
+        self.typing_box.config(state="disabled")
+        self.seconds = TOTAL_TEST_TIME_SECONDS
+
+        # Calculate and display typing speed and accuracy
+        self.typing_speed = round((self.total_characters_typed / 5) * 2, 2)
+        self.typing_accuracy = round(((self.total_characters_typed - self.incorrect_characters_typed) / self.total_characters_typed) * 100, 2)
+        self.typing_speed_label.config(text=f"Speed: {self.typing_speed} wpm")
+        self.typing_accuracy_label.config(text=f"Accuracy: {self.typing_accuracy}%")
+
+        # Reset characters typed
+        self.total_characters_typed = 0
+        self.incorrect_characters_typed = 0
 
 if __name__ == "__main__":
     typing_obj = TypingApp()
