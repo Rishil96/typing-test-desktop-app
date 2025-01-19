@@ -8,8 +8,9 @@ TEST_STARTING_POINT = 30
 
 class TypingApp(tk.Tk):
 
-    def __init__(self):
+    def __init__(self, name):
         super().__init__()
+        self.name = name
         # Attributes
         self.seconds = TOTAL_TEST_TIME_SECONDS
         self.typing_speed = 0
@@ -35,7 +36,7 @@ class TypingApp(tk.Tk):
                                      bg=APPLICATION_BACKGROUND_COLOR)
         self.header_label.grid(row=0, column=0, columnspan=2, pady=(20, 5), sticky="ew")
 
-        self.sub_header_label = tk.Label(text="Test your typing speed here!",
+        self.sub_header_label = tk.Label(text=f"Hi {self.name}, Test your typing speed here!",
                                          font=(FONT_STYLE, 14),
                                          fg="#666666",  # Medium gray text
                                          bg=APPLICATION_BACKGROUND_COLOR)
@@ -171,6 +172,3 @@ class TypingApp(tk.Tk):
         # Reset characters typed
         self.total_characters_typed = 0
         self.incorrect_characters_typed = 0
-
-if __name__ == "__main__":
-    typing_obj = TypingApp()
