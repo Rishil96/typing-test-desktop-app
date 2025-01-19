@@ -10,7 +10,7 @@ class TypingApp(tk.Tk):
     def __init__(self):
         super().__init__()
         # Attributes
-        self.seconds = 60
+        self.seconds = 66
         self.recent_typing_speed = 0
         self.max_typing_speed = 0
         self.words_list = self.get_word_list()
@@ -40,7 +40,7 @@ class TypingApp(tk.Tk):
 
         # Text Display area for typing test
         self.typing_content = tk.Label(text="Here is some dummy text to type.\nTry your best to finish quickly!",
-                                       font=("Courier", 12),
+                                       font=("Courier", 14),
                                        fg="#444444",  # Slightly darker gray
                                        bg=APPLICATION_BACKGROUND_COLOR,
                                        wraplength=500,
@@ -50,6 +50,7 @@ class TypingApp(tk.Tk):
         # Text Input field for user to type
         self.typing_box = tk.Entry(font=(FONT_STYLE, 12, "normal"))
         self.typing_box.bind("<KeyRelease>", self.key_press_event)
+        self.typing_box.config(state="disabled")
         self.typing_box.grid(row=3, column=0, columnspan=2, pady=15, sticky="ew", padx=20, ipady=5)
 
         # Start button
@@ -80,16 +81,34 @@ class TypingApp(tk.Tk):
 
     def update_timer(self):
         self.start_button.config(state="disabled")
-        if self.seconds > 0:
+        # Countdown before starting test
+        if self.seconds > 60:
+            self.seconds -= 1
+            self.timer_label.config(text=f"Test starts in {self.seconds % 60}")
+            self.after(1000, self.update_timer)
+        # Actual test start point, enable typing box
+        elif self.seconds == 60:
+            self.seconds -= 1
+            # Enable typing box state
+            self.typing_box.config(state="normal")
+            # Place cursor on typing box
+            self.typing_box.focus_set()
+            self.timer_label.config(text=f"Time Left 0:{self.seconds}")
+            self.after(1000, self.update_timer)
+        # Test running state, maintain timer
+        elif self.seconds > 0:
             self.seconds -= 1
             if self.seconds < 10:
                 self.timer_label.config(text=f"Time Left 0:0{self.seconds}")
             else:
                 self.timer_label.config(text=f"Time Left 0:{self.seconds}")
             self.after(1000, self.update_timer)
+        # Test over state
         else:
             self.timer_label.config(text="Time's up!")
             self.start_button.config(state="normal")
+            self.typing_box.delete(0, tk.END)
+            self.typing_box.config(state="disabled")
 
     @staticmethod
     def get_word_list() -> list:
@@ -99,7 +118,7 @@ class TypingApp(tk.Tk):
 
         return word_list
 
-    def generate_test_sentence(self, num_words=12):
+    def generate_test_sentence(self, num_words=10):
         sentence = " ".join(random.sample(self.words_list, num_words))
         return sentence
 
@@ -109,8 +128,18 @@ class TypingApp(tk.Tk):
         self.typing_content.config(text=random_sentence)
 
     def key_press_event(self, e):
-        print("Key pressed:", e.char)
-        print(self.typing_box.get())
+        typed_text = self.typing_box.get()
+        print(e.char)
+        # Check if full sentence was typed correctly
+        if typed_text == self.current_test_sentence:
+            self.display_test_sentence()
+            self.typing_box.delete(0, tk.END)
+        # Check for inaccuracies in typed sentence
+        elif typed_text != self.current_test_sentence[:len(typed_text)]:
+            self.typing_box.config(fg="red")
+        else:
+            self.typing_box.config(fg="green")
+
 
     def start_test(self):
         # Start timer
